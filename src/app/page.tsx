@@ -1,327 +1,292 @@
-import type { ReactNode } from "react";
+import Link from "next/link";
+import { getHealth, getOrders, getProducts } from "@/lib/api-client";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
-const platformStacks = [
-  {
-    platform: "Web",
-    stack: "React 18+, Vite, TypeScript, Tailwind CSS",
-    notes: "CSR-first with routing ready for future SSR.",
-  },
-  {
-    platform: "Mobile",
-    stack: "Flutter 3+, Dart, flutter_riverpod/provider, dio",
-    notes:
-      "Adopt Tailwind-inspired tokens and custom widgets to mirror the web UI.",
-  },
-  {
-    platform: "Shared",
-    stack:
-      "OpenAPI schema, GitHub Actions, ESLint/Prettier, Dart format & analyze",
-    notes: "Encourage code generation for typings and models across platforms.",
-  },
-];
+export default async function Home() {
+  const [health, products, orders] = await Promise.all([
+    getHealth(),
+    getProducts(),
+    getOrders(),
+  ]);
 
-const backendEndpoints = [
-  { label: "Health", method: "GET", path: "/health" },
-  { label: "Products", method: "CRUD", path: "/api/v1/products" },
-  { label: "Users", method: "CRUD", path: "/api/v1/users" },
-  { label: "Orders", method: "GET/POST", path: "/api/v1/orders" },
-];
+  const activeProducts = products.filter(
+    (product) => product.status !== "archived",
+  );
+  const recentOrders = orders.slice(0, 3);
+  const totalMrr = orders
+    .filter((order) => order.status === "fulfilled")
+    .reduce((total, order) => total + order.total, 0);
 
-const sharedUx = [
-  "Responsive navigation for products, account placeholder, and orders",
-  "Tailwind-driven palette, typography, and spacing tokens",
-  "Optimistic UI updates with graceful loading fallbacks",
-  "Error boundaries and toast/snackbar notifications",
-];
-
-const webArchitecture = [
-  "Scaffold with Vite React TypeScript template",
-  "Install and configure Tailwind CSS with brand tokens",
-  "Set up ESLint (Airbnb + hooks) and Prettier",
-  "Use folders for components, pages, features, hooks, services, state, styles",
-  "Client routing with React Router v6 (Home, Products, ProductDetail, Orders, NotFound)",
-  "Centralized axios client with interceptors",
-  "Integrate TanStack Query for fetching, caching, optimistic updates",
-];
-
-const webFeatures = [
-  "Product listing grid with search and filters",
-  "Product detail view with add-to-cart interactions (client-side cart)",
-  "Order history sourced from /api/v1/orders (mocked user context)",
-  "Reusable Tailwind components for buttons, badges, modals, and forms",
-  "Accessibility via semantic HTML, keyboard navigation, and focus states",
-];
-
-const devExperience = [
-  "Configure Vite proxy for /api to http://localhost:8080",
-  "Provide scripts for dev, build, preview, lint, and test",
-  "Set up Jest + React Testing Library; consider Storybook",
-];
-
-const apiConsumption = [
-  "Generate TypeScript types via openapi-typescript (with manual curation as needed)",
-  "For Flutter, leverage openapi-generator-cli or Freezed models",
-  "Maintain manual typings aligned with backend models until OpenAPI spec is available",
-];
-
-const configuration = [
-  "Web uses .env files (e.g., VITE_API_BASE_URL)",
-  "Flutter stores config under lib/config with flavor-specific files",
-  "Document toggling between mock and live data for offline development",
-];
-
-const stylingTokens = [
-  "Teal primary, violet accent, and neutral gray palette",
-  "Inter typography on web; GoogleFonts.inter on mobile",
-  "Spacing scale in multiples of 4 with md (8px) corner radius",
-  "Provide design reference (Figma placeholder) for future collaboration",
-  "Utility helpers in Flutter to mimic Tailwind ergonomics",
-];
-
-const stateFlow = [
-  "Global state covers auth (placeholder), catalog, cart, and orders",
-  "Remote state handled with React Query / Riverpod",
-  "Persist cart with localStorage on web and shared_preferences on mobile",
-  "Normalize backend errors with user-friendly messaging",
-];
-
-const testingStrategy = [
-  "Web: Jest unit tests, Testing Library components, Playwright E2E",
-  "Mobile: Widget tests and integration tests with mocked backend",
-  "Optional shared smoke tests against seeded backend",
-];
-
-const deliveryChecklist = [
-  "Complete scaffolds (package.json, pubspec.yaml, etc.)",
-  "Tailwind configuration aligned with shared tokens",
-  "Example screens consuming /api/v1/* endpoints",
-  "Placeholder assets and README instructions",
-  "Sample GitHub Actions running lint and tests",
-  "Docs for connecting to the Go backend (proxy, env vars)",
-  "Notes on future enhancements (auth, checkout, analytics)",
-];
-
-const futureEnhancements = [
-  "JWT/OAuth2 authentication",
-  "Stripe payments and inventory synchronization",
-  "Web/mobile push notifications for order updates",
-  "Internationalization support and theming",
-];
-
-export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="bg-gradient-to-br from-teal-500/20 via-slate-900 to-violet-600/20">
-        <header className="mx-auto max-w-5xl px-6 pb-12 pt-16 sm:px-8">
-          <span className="inline-flex items-center rounded-full border border-teal-400/40 bg-teal-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-teal-200">
-            Cryptotrade
-          </span>
-          <h1 className="mt-6 text-4xl font-semibold text-white sm:text-5xl">
-            Frontend Build Brief
-          </h1>
-          <p className="mt-4 max-w-2xl text-base text-slate-200 sm:text-lg">
-            A consolidated reference to align the React web and Flutter mobile
-            clients with the Go backend. Use this blueprint when scaffolding new
-            projects or onboarding collaborators.
-          </p>
-          <div className="mt-8 grid gap-4 text-sm text-slate-200 sm:grid-cols-3">
-            {[
-              {
-                label: "Backend base URL",
-                value: "http://localhost:8080",
-              },
-              { label: "Design System", value: "Tailwind CSS tokens" },
-              { label: "CI", value: "GitHub Actions (lint & tests)" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 shadow-sm backdrop-blur"
+    <div className="space-y-12">
+      <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-10 shadow-xl shadow-teal-500/5">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-xl space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-teal-200">
+              Roadmap Control Tower
+            </span>
+            <h1 className="text-4xl font-semibold text-white sm:text-5xl">
+              Coordinate the Cryptotrade frontend suite with live backend
+              telemetry
+            </h1>
+            <p className="text-base text-slate-300">
+              Monitor health, curate the catalog, and ensure delivery readiness
+              for React web and Flutter mobile clients. Tailwind tokens, shared
+              data contracts, and resilient fallbacks are baked in so teams can
+              ship confidently.
+            </p>
+            <div className="flex flex-wrap gap-3 text-sm text-slate-300">
+              <Link
+                href="/products"
+                className="rounded-full bg-teal-400/20 px-4 py-2 font-medium text-teal-100 shadow hover:bg-teal-400/30"
               >
-                <dt className="text-xs uppercase tracking-wide text-slate-300">
-                  {item.label}
-                </dt>
-                <dd className="mt-1 font-medium text-slate-100">
-                  {item.value}
+                Manage catalog
+              </Link>
+              <Link
+                href="/orders"
+                className="rounded-full border border-white/10 px-4 py-2 font-medium text-white/80 hover:border-teal-400/40 hover:text-white"
+              >
+                Review orders
+              </Link>
+            </div>
+          </div>
+          <dl className="grid w-full max-w-sm grid-cols-2 gap-4 text-sm text-slate-300">
+            <MetricCard
+              label="Products"
+              value={activeProducts.length.toString()}
+              trend="Live in catalog"
+            />
+            <MetricCard
+              label="MRR (fulfilled)"
+              value={formatCurrency(totalMrr, "USD")}
+              trend="Rolling 30 days"
+            />
+            <MetricCard
+              label="Orders"
+              value={orders.length.toString()}
+              trend={`${orders.filter((order) => order.status === "processing").length} processing`}
+            />
+            <MetricCard
+              label="API Health"
+              value={health.status.toUpperCase()}
+              trend={health.uptime ?? "—"}
+            />
+          </dl>
+        </div>
+      </section>
+
+      <section className="grid gap-8 lg:grid-cols-[2fr,1fr]">
+        <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+          <header className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Platform scope
+              </h2>
+              <p className="text-sm text-slate-400">
+                Alignment of React web and Flutter mobile deliverables
+              </p>
+            </div>
+            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-violet-200">
+              Dual Stack
+            </span>
+          </header>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <CapabilityCard
+              title="Web"
+              description="React 18+ with Vite, Tailwind CSS, TanStack Query, and axios client ready for auth interceptors."
+              items={[
+                "Routing via React Router blueprint (mirrored with Next.js app routes)",
+                "Shared Tailwind token contract",
+                "Optimistic cart interactions persisted in localStorage",
+              ]}
+            />
+            <CapabilityCard
+              title="Mobile"
+              description="Flutter 3+ with Riverpod state, Dio HTTP client, and Tailwind-inspired design tokens."
+              items={[
+                "Flavor-based environment management",
+                "Shared preferences persistence for cart",
+                "Utility widgets to emulate Tailwind spacing & typography",
+              ]}
+            />
+          </div>
+        </article>
+        <aside className="space-y-6">
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
+            <h3 className="text-lg font-semibold text-white">
+              Backend telemetry
+            </h3>
+            <dl className="mt-4 space-y-3 text-sm text-slate-300">
+              <div className="flex items-center justify-between gap-3">
+                <dt>Base URL</dt>
+                <dd className="font-medium text-slate-100">
+                  http://localhost:8080
                 </dd>
               </div>
-            ))}
-          </div>
-        </header>
-      </div>
-
-      <main className="mx-auto max-w-5xl space-y-16 px-6 pb-20 pt-12 sm:px-8">
-        <Section title="Project Vision">
-          <p className="text-base text-slate-200">
-            Deliver a unified, high-performance customer experience across web
-            and mobile surfaces. Interfaces should echo backend domain concepts
-            (products, users, orders, health) while leaving room for future
-            authentication and advanced commerce capabilities.
-          </p>
-        </Section>
-
-        <Section title="Target Platforms & Tech Stack">
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-sm">
-            <table className="min-w-full divide-y divide-white/10 text-left text-sm">
-              <thead className="bg-white/5 text-xs uppercase tracking-wide text-slate-300">
-                <tr>
-                  <th className="px-4 py-3">Platform</th>
-                  <th className="px-4 py-3">Stack</th>
-                  <th className="px-4 py-3">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-slate-100">
-                {platformStacks.map((stack) => (
-                  <tr key={stack.platform} className="hover:bg-white/5">
-                    <td className="px-4 py-3 font-semibold">
-                      {stack.platform}
-                    </td>
-                    <td className="px-4 py-3">{stack.stack}</td>
-                    <td className="px-4 py-3 text-slate-200">{stack.notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        <Section title="Backend Interface Reference">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {backendEndpoints.map((endpoint) => (
-              <div
-                key={endpoint.path}
-                className="rounded-lg border border-white/10 bg-gradient-to-br from-slate-900/80 via-slate-900 to-slate-900/70 px-5 py-4"
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">
-                  {endpoint.label}
-                </p>
-                <p className="mt-2 flex items-center gap-2 text-sm text-slate-200">
-                  <span className="inline-flex items-center rounded-md bg-teal-500/20 px-2 py-1 text-xs font-semibold text-teal-200">
-                    {endpoint.method}
-                  </span>
-                  {endpoint.path}
-                </p>
+              <div className="flex items-center justify-between gap-3">
+                <dt>Version</dt>
+                <dd>{health.version ?? "—"}</dd>
               </div>
-            ))}
+              <div className="flex items-start justify-between gap-3">
+                <dt>Dependencies</dt>
+                <dd className="text-right">
+                  {health.dependencies ? (
+                    <ul className="space-y-1 text-right">
+                      {Object.entries(health.dependencies).map(
+                        ([name, status]) => (
+                          <li key={name} className="font-medium text-slate-200">
+                            <span className="text-slate-400">{name}</span>:{" "}
+                            {status}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
+            <h3 className="text-lg font-semibold text-white">
+              Delivery checklist
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+              {[
+                "Vite + Next.js parity starter with Tailwind tokens",
+                "OpenAPI-driven typings for TypeScript & Dart",
+                "CI enforcing lint, tests, and formatters",
+                "Docs to flip between API mocks and live backend",
+                "Storybook & widget book seeds for shared components",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <span
+                    className="mt-1 h-2 w-2 rounded-full bg-teal-400"
+                    aria-hidden
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </aside>
+      </section>
+
+      <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Recent orders</h2>
+            <p className="text-sm text-slate-400">
+              Audit history and fulfilment status synced with backend contracts
+            </p>
           </div>
-        </Section>
-
-        <Section title="Shared UX Foundations">
-          <BulletList items={sharedUx} />
-        </Section>
-
-        <Section
-          title="Web Architecture & Key Features"
-          subtitle="React + Tailwind"
-        >
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card title="Architecture" items={webArchitecture} />
-            <Card title="Key Features" items={webFeatures} />
-          </div>
-        </Section>
-
-        <Section title="Developer Experience">
-          <BulletList items={devExperience} />
-        </Section>
-
-        <Section title="API Contract Consumption">
-          <BulletList items={apiConsumption} />
-        </Section>
-
-        <Section title="Environment & Configuration">
-          <BulletList items={configuration} />
-        </Section>
-
-        <Section title="Styling System">
-          <BulletList items={stylingTokens} />
-        </Section>
-
-        <Section title="State & Data Flow">
-          <BulletList items={stateFlow} />
-        </Section>
-
-        <Section title="Testing Strategy">
-          <BulletList items={testingStrategy} />
-        </Section>
-
-        <Section title="Delivery Checklist">
-          <BulletList items={deliveryChecklist} />
-        </Section>
-
-        <Section title="Future Enhancements">
-          <BulletList items={futureEnhancements} />
-        </Section>
-      </main>
-
-      <footer className="border-t border-white/10 bg-slate-900/80 py-8">
-        <div className="mx-auto flex max-w-5xl flex-col gap-3 px-6 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>
-            © {new Date().getFullYear()} Cryptotrade. Prepared for frontend
-            scaffolding.
-          </p>
-          <p className="text-slate-400">
-            Ready for future enhancements: authentication, checkout, and
-            analytics.
-          </p>
+          <Link
+            href="/orders"
+            className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-white/80 hover:border-teal-400/40 hover:text-white"
+          >
+            View all orders
+          </Link>
+        </header>
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
+          <table className="min-w-full divide-y divide-white/5 text-sm">
+            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Order</th>
+                <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-slate-200">
+              {recentOrders.map((order) => (
+                <tr key={order.id} className="transition hover:bg-white/5">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-white">{order.id}</div>
+                    <div className="text-xs text-slate-400">
+                      {order.lineItems.length} items
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={order.status} />
+                  </td>
+                  <td className="px-4 py-3 text-right font-medium">
+                    {formatCurrency(order.total, order.currency)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </footer>
+      </section>
     </div>
   );
 }
 
-function Section({
-  title,
-  children,
-  subtitle,
+function MetricCard({
+  label,
+  value,
+  trend,
 }: {
-  title: string;
-  subtitle?: string;
-  children: ReactNode;
+  label: string;
+  value: string;
+  trend: string;
 }) {
   return (
-    <section className="space-y-5">
-      <header>
-        <h2 className="text-2xl font-semibold text-white">{title}</h2>
-        {subtitle ? (
-          <p className="mt-1 text-sm uppercase tracking-[0.2em] text-violet-200">
-            {subtitle}
-          </p>
-        ) : null}
-      </header>
-      <div className="text-sm text-slate-200">{children}</div>
-    </section>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-white/5">
+      <dt className="text-xs uppercase tracking-wide text-slate-400">
+        {label}
+      </dt>
+      <dd className="mt-2 text-lg font-semibold text-white">{value}</dd>
+      <p className="text-xs text-slate-400">{trend}</p>
+    </div>
   );
 }
 
-function BulletList({ items }: { items: string[] }) {
+function CapabilityCard({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: string[];
+}) {
   return (
-    <ul className="grid gap-3">
-      {items.map((item) => (
-        <li
-          key={item}
-          className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 shadow-sm"
-        >
-          <span
-            className="mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full bg-teal-400"
-            aria-hidden
-          />
-          <span className="leading-relaxed text-slate-200">{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function Card({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <ul className="mt-4 grid gap-3 text-sm text-slate-200">
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <p className="mt-1 text-sm text-slate-300">{description}</p>
+      </div>
+      <ul className="space-y-2 text-sm text-slate-300">
         {items.map((item) => (
-          <li key={item} className="leading-relaxed">
-            {item}
+          <li key={item} className="flex gap-2">
+            <span
+              className="mt-1 h-2 w-2 shrink-0 rounded-full bg-violet-400"
+              aria-hidden
+            />
+            <span>{item}</span>
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    pending: "bg-amber-500/20 text-amber-200 border-amber-500/40",
+    processing: "bg-sky-500/20 text-sky-200 border-sky-500/40",
+    fulfilled: "bg-teal-500/20 text-teal-100 border-teal-400/40",
+    cancelled: "bg-rose-500/20 text-rose-200 border-rose-500/40",
+  };
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${map[status] ?? ""}`}
+    >
+      {status}
+    </span>
   );
 }
