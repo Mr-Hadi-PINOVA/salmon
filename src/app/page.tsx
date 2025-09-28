@@ -1,103 +1,292 @@
-import Image from "next/image";
+import Link from "next/link";
+import { getHealth, getOrders, getProducts } from "@/lib/api-client";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
-export default function Home() {
+export default async function Home() {
+  const [health, products, orders] = await Promise.all([
+    getHealth(),
+    getProducts(),
+    getOrders(),
+  ]);
+
+  const activeProducts = products.filter(
+    (product) => product.status !== "archived",
+  );
+  const recentOrders = orders.slice(0, 3);
+  const totalMrr = orders
+    .filter((order) => order.status === "fulfilled")
+    .reduce((total, order) => total + order.total, 0);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <div className="space-y-12">
+      <section className="rounded-3xl border border-white/10 bg-slate-950/70 p-10 shadow-xl shadow-teal-500/5">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-xl space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-teal-200">
+              Roadmap Control Tower
+            </span>
+            <h1 className="text-4xl font-semibold text-white sm:text-5xl">
+              Coordinate the Cryptotrade frontend suite with live backend
+              telemetry
+            </h1>
+            <p className="text-base text-slate-300">
+              Monitor health, curate the catalog, and ensure delivery readiness
+              for React web and Flutter mobile clients. Tailwind tokens, shared
+              data contracts, and resilient fallbacks are baked in so teams can
+              ship confidently.
+            </p>
+            <div className="flex flex-wrap gap-3 text-sm text-slate-300">
+              <Link
+                href="/products"
+                className="rounded-full bg-teal-400/20 px-4 py-2 font-medium text-teal-100 shadow hover:bg-teal-400/30"
+              >
+                Manage catalog
+              </Link>
+              <Link
+                href="/orders"
+                className="rounded-full border border-white/10 px-4 py-2 font-medium text-white/80 hover:border-teal-400/40 hover:text-white"
+              >
+                Review orders
+              </Link>
+            </div>
+          </div>
+          <dl className="grid w-full max-w-sm grid-cols-2 gap-4 text-sm text-slate-300">
+            <MetricCard
+              label="Products"
+              value={activeProducts.length.toString()}
+              trend="Live in catalog"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <MetricCard
+              label="MRR (fulfilled)"
+              value={formatCurrency(totalMrr, "USD")}
+              trend="Rolling 30 days"
+            />
+            <MetricCard
+              label="Orders"
+              value={orders.length.toString()}
+              trend={`${orders.filter((order) => order.status === "processing").length} processing`}
+            />
+            <MetricCard
+              label="API Health"
+              value={health.status.toUpperCase()}
+              trend={health.uptime ?? "—"}
+            />
+          </dl>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+
+      <section className="grid gap-8 lg:grid-cols-[2fr,1fr]">
+        <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+          <header className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Platform scope
+              </h2>
+              <p className="text-sm text-slate-400">
+                Alignment of React web and Flutter mobile deliverables
+              </p>
+            </div>
+            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-violet-200">
+              Dual Stack
+            </span>
+          </header>
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <CapabilityCard
+              title="Web"
+              description="React 18+ with Vite, Tailwind CSS, TanStack Query, and axios client ready for auth interceptors."
+              items={[
+                "Routing via React Router blueprint (mirrored with Next.js app routes)",
+                "Shared Tailwind token contract",
+                "Optimistic cart interactions persisted in localStorage",
+              ]}
+            />
+            <CapabilityCard
+              title="Mobile"
+              description="Flutter 3+ with Riverpod state, Dio HTTP client, and Tailwind-inspired design tokens."
+              items={[
+                "Flavor-based environment management",
+                "Shared preferences persistence for cart",
+                "Utility widgets to emulate Tailwind spacing & typography",
+              ]}
+            />
+          </div>
+        </article>
+        <aside className="space-y-6">
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
+            <h3 className="text-lg font-semibold text-white">
+              Backend telemetry
+            </h3>
+            <dl className="mt-4 space-y-3 text-sm text-slate-300">
+              <div className="flex items-center justify-between gap-3">
+                <dt>Base URL</dt>
+                <dd className="font-medium text-slate-100">
+                  http://localhost:8080
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt>Version</dt>
+                <dd>{health.version ?? "—"}</dd>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <dt>Dependencies</dt>
+                <dd className="text-right">
+                  {health.dependencies ? (
+                    <ul className="space-y-1 text-right">
+                      {Object.entries(health.dependencies).map(
+                        ([name, status]) => (
+                          <li key={name} className="font-medium text-slate-200">
+                            <span className="text-slate-400">{name}</span>:{" "}
+                            {status}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  ) : (
+                    "—"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="rounded-3xl border border-white/10 bg-slate-950/60 p-6">
+            <h3 className="text-lg font-semibold text-white">
+              Delivery checklist
+            </h3>
+            <ul className="mt-4 space-y-3 text-sm text-slate-300">
+              {[
+                "Vite + Next.js parity starter with Tailwind tokens",
+                "OpenAPI-driven typings for TypeScript & Dart",
+                "CI enforcing lint, tests, and formatters",
+                "Docs to flip between API mocks and live backend",
+                "Storybook & widget book seeds for shared components",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <span
+                    className="mt-1 h-2 w-2 rounded-full bg-teal-400"
+                    aria-hidden
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </aside>
+      </section>
+
+      <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-8">
+        <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Recent orders</h2>
+            <p className="text-sm text-slate-400">
+              Audit history and fulfilment status synced with backend contracts
+            </p>
+          </div>
+          <Link
+            href="/orders"
+            className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-white/80 hover:border-teal-400/40 hover:text-white"
+          >
+            View all orders
+          </Link>
+        </header>
+        <div className="mt-6 overflow-hidden rounded-2xl border border-white/5">
+          <table className="min-w-full divide-y divide-white/5 text-sm">
+            <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-400">
+              <tr>
+                <th className="px-4 py-3">Order</th>
+                <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-slate-200">
+              {recentOrders.map((order) => (
+                <tr key={order.id} className="transition hover:bg-white/5">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold text-white">{order.id}</div>
+                    <div className="text-xs text-slate-400">
+                      {order.lineItems.length} items
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={order.status} />
+                  </td>
+                  <td className="px-4 py-3 text-right font-medium">
+                    {formatCurrency(order.total, order.currency)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  trend,
+}: {
+  label: string;
+  value: string;
+  trend: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-inner shadow-white/5">
+      <dt className="text-xs uppercase tracking-wide text-slate-400">
+        {label}
+      </dt>
+      <dd className="mt-2 text-lg font-semibold text-white">{value}</dd>
+      <p className="text-xs text-slate-400">{trend}</p>
+    </div>
+  );
+}
+
+function CapabilityCard({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: string[];
+}) {
+  return (
+    <div className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <div>
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <p className="mt-1 text-sm text-slate-300">{description}</p>
+      </div>
+      <ul className="space-y-2 text-sm text-slate-300">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2">
+            <span
+              className="mt-1 h-2 w-2 shrink-0 rounded-full bg-violet-400"
+              aria-hidden
+            />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    pending: "bg-amber-500/20 text-amber-200 border-amber-500/40",
+    processing: "bg-sky-500/20 text-sky-200 border-sky-500/40",
+    fulfilled: "bg-teal-500/20 text-teal-100 border-teal-400/40",
+    cancelled: "bg-rose-500/20 text-rose-200 border-rose-500/40",
+  };
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${map[status] ?? ""}`}
+    >
+      {status}
+    </span>
   );
 }

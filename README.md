@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cryptotrade Experience Console
 
-## Getting Started
+Next.js 15 control surface that mirrors the "Cryptotrade Frontend Build Brief" and connects to the Go commerce API.
+It provides:
 
-First, run the development server:
+- Catalog management views with search, status filters, and navigation to product details
+- Order operations dashboard with fulfilment filters and live totals
+- Home overview summarising platform scope, delivery checklist, and backend telemetry
+- React Query data layer with mock fallbacks for offline development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Node.js 18+
+- Optional Go backend running locally at `http://localhost:8080`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Install dependencies
 
-## Learn More
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. Configure environment variables (optional)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   Create a `.env.local` file if you need to override defaults:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```env
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   NEXT_PUBLIC_USE_API_MOCKS=false
+   ```
 
-## Deploy on Vercel
+   Set `NEXT_PUBLIC_USE_API_MOCKS=true` to force mock data without hitting the backend.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Run the development server
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npm run dev
+   ```
+
+   Visit [http://localhost:3000](http://localhost:3000) to explore the console.
+
+## Available scripts
+
+| Command       | Description                                            |
+| ------------- | ------------------------------------------------------ |
+| `npm run dev` | Start Next.js in development mode with Turbopack       |
+| `npm run build` | Create a production build                            |
+| `npm run start` | Serve the production build                           |
+| `npm run lint` | Run Biome static analysis across the codebase        |
+| `npm run format` | Format files with Biome                             |
+
+## Architectural notes
+
+- React Query powers client-side data fetching with automatic fallback to curated mock data when the API is offline.
+- Tailwind CSS v4 delivers the shared design language described in the brief, with gradients and tokens configured in `globals.css`.
+- All routes live under the Next.js App Router:
+  - `/` – strategic overview and health telemetry
+  - `/products` – catalog explorer with detail pages under `/products/[id]`
+  - `/orders` – operational order audit
+- Types, API clients, and utilities are colocated in `src/lib` to encourage reuse across future platforms.
+
+## Testing & quality
+
+- `npm run lint` ensures code style via Biome.
+- React Query Devtools activate automatically in development for introspecting cache state.
+
+## Future enhancements
+
+The console leaves room for future work highlighted in the original brief: authentication, checkout flows, analytics, Storybook for components, and OpenAPI-driven code generation.
